@@ -1,7 +1,7 @@
-import hashlib
 import sqlite3
 
 from flask import Flask, request
+from werkzeug.security import generate_password_hash
 
 app = Flask(__name__)
 
@@ -11,14 +11,12 @@ def get_user():
     user_id = request.args.get("id", "")
     conn = sqlite3.connect("users.db")
     cur = conn.cursor()
-    # B608: SQL built by string concatenation
-    cur.execute("SELECT * FROM users WHERE id = '" + user_id + "'")
+    cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
     return str(cur.fetchall())
 
 
 def hash_password(pw):
-    # B303: MD5 is cryptographically broken for password hashing
-    return hashlib.md5(pw.encode()).hexdigest()
+    return generate_password_hash(pw, method="pbkdf2:sha256")
 
 
 @app.route("/health")
